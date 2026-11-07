@@ -122,3 +122,7 @@ Translating again overwrites the earlier translation of the translated fields in
 | *Too many requests…* | Wait a moment and try again. |
 
 If you don't see the **Translate** button at all, the collection may not be enabled for Supertext, or you may not have permission — ask your administrator.
+
+## Support
+
+Questions, problems or ideas: use the [Supertext support form](https://integrations.supertext.com/en/support?platform=payload-cms). Mention the version of Payload CMS and of the plugin, what you did and what you expected; an error message helps a lot. You get an answer by email, in your language.

@@ -14,6 +14,7 @@ All notable changes to this project are documented here. Format: [Keep a Changel
 
 - **Supertext settings** (admin sidebar → *Supertext* → *Supertext settings*): one combo box per Payload locale (source locale included) with Supertext's languages as *Name (code)*, preselected with Supertext's suggestion, plus a formal/informal select where the chosen language offers one. Stored in a new global `supertext-settings`; only Supertext's codes can be saved. New option `settingsAccess` (default: `access`, else any logged-in user) decides who may change it. **SQL databases: create a migration after updating** (`npx payload migrate:create supertext_settings`), and again whenever you add or remove a locale.
 - The Supertext panel shows where each locale's code comes from (automatic, chosen in the settings, or the `languageMap` option) and links to the settings.
+- Support: the Supertext support form is linked in the README, the user guide and GitHub's "New issue" page.
 
 ### Changed
 
