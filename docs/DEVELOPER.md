@@ -253,6 +253,35 @@ cd ../test/docs && BASE_URL=http://localhost:3000 npm run screenshots
 
 Use `localhost`, not `127.0.0.1`: `next dev` blocks its dev assets for other origins and the admin stays blank. Always set `SUPERTEXT_REPORT_URL` to the stand-in, so a screenshot run never reports to the live Commando Center. The dashboard panel (`status-panel.png`) shows the live demo's ping URL instead of the local one. The script hides the Next.js dev badge and the account avatar (Gravatar). When the seeded content changes, add the new English strings and their German to `sample-de.json`.
 
+## Demo movie
+
+`docs/images/demo.gif` (at the top of the README) is recorded by `test/docs/movie.mjs` with Supertext's shared movie kit (`test/docs/movie/movie-kit.mjs` and `assets/`: intro and outro cards, caption bar, cursor, cuts the waiting time; Inter under the SIL OFL, `assets/fonts/Inter-LICENSE.txt`). It shows, with a spoken line for every step (the GIF is silent), as the demo's **editor**: the seeded home page in English, *Translate* with *Deutsch* and *Français* ticked, *Translate into 2*, the waiting state, the *Translated into …* message, the locale switched to *Deutsch (Schweiz)* and the German draft. Run it against a fresh demo (new database, set up as for the screenshots, plus the `DEMO_EDITOR_*` account) and the stand-in with a delay, so the waiting state is visible:
+
+```bash
+cd test/docs && npm install && npx playwright install chromium
+STAND_IN_DELAY=8 npm run stand-in &                  # files stay "translating" for 8 s
+# fresh demo as in "Docs screenshots", with DEMO_EDITOR_EMAIL / DEMO_EDITOR_PASSWORD set too
+pip install piper-tts                                # the voice (once)
+BASE_URL=http://localhost:3000 DEMO_EDITOR_EMAIL=… DEMO_EDITOR_PASSWORD=… npm run movie
+```
+
+The MP4 is narrated with [Piper](https://pypi.org/project/piper-tts/) (`pip install piper-tts`): the kit's `say()` speaks each step's line, shows its caption and holds until the line is finished; the time spent making the speech is cut. The voice model (63 MB, pinned revision, checked by SHA-256) downloads itself once into `test/docs/movie/voice/` (git-ignored; never commit it). Without Piper, or with `MOVIE_VOICE=0`, the movie is made silent with the captions only.
+
+Voice: Piper voice “alba” (en_GB), trained on a dataset from the University of Edinburgh's Centre for Speech Technology Research, CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
+It needs `ffmpeg` and writes 1280×720 at 30 fps. The GIF (800 px, 12 fps, keep it under 3 MB) is committed; the MP4 (about 40 s) isn't: it goes to `test/docs/movie/out/Payload-Supertext-Translation.mp4` (git-ignored) or to `MOVIE_OUT`. `CHROMIUM_PATH` picks another Chromium. Record it again when the Translate control or the edit view changes. The kit is the same in every Supertext plugin repo: don't restyle it here.
+
+### Install movie
+
+`test/docs/movie-install.mjs` records the install and configuration movie with the same kit and voice (MP4 only, no GIF). It shows the install steps from `docs/INSTALLATION.md` in the kit's terminal (`npm install github:Supertext/Payload-Supertext-Translation`, the plugin in `payload.config.ts` as a config excerpt, `npx payload generate:importmap`, `npx payload migrate:create supertext_settings`, `SUPERTEXT_API_KEY` in `.env` with the fake key `st-demo-0000-0000-0000`, `npm run dev`), where the key comes from, then, as the demo's **administrator**: the Supertext panel on the dashboard (*Check again*: the key works), **Supertext → Supertext settings** (German → *Swiss High German (de-CH)*, *Translation review* left off, *Save*) and the *Translate* button on a page. Page loads are cut, and local addresses (the panel's ping URL) are shown as the live demo's. Any demo whose plugin talks to the stand-in works (it needn't be fresh):
+
+```bash
+cd test/docs && npm run stand-in &
+BASE_URL=http://localhost:3000 DEMO_ADMIN_EMAIL=… DEMO_ADMIN_PASSWORD=… npm run movie:install
+```
+
+The MP4 (about 90 s) goes to `test/docs/movie/out/Payload-Supertext-Translation-install.mp4` (git-ignored) or to `MOVIE_OUT`; it isn't committed. Record it again when the install steps, the Supertext panel or the Supertext settings change.
+
 ## Dependency updates
 
 Dependabot (`.github/dependabot.yml`) opens weekly pull requests: minor and patch updates grouped into one, GitHub Actions in another, each major update on its own. Merge one when CI is green and it doesn't change what the plugin supports.

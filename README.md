@@ -2,6 +2,8 @@
 
 AI translation for [Payload CMS 3](https://payloadcms.com) by [Supertext](https://www.supertext.com). Adds a **Translate** button to your localized collections and globals: pick target languages, and the plugin sends the document's localized fields to Supertext and saves the translations into those locales — as drafts for review when drafts are enabled.
 
+![Demo: a Payload page in English, Translate with German and French ticked, Translate into 2, and the German version of the page as a draft](docs/images/demo.gif)
+
 ```ts
 import { supertextTranslation } from 'payload-supertext-translation'
 

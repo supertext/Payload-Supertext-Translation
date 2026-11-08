@@ -7,6 +7,9 @@ coverage/
 *.log
 .DS_Store
 test/docs/node_modules/
+test/docs/package-lock.json
+test/docs/movie/out/
+test/docs/movie/voice/
 # Written by `next dev` (Next.js agent hints), not part of the demo
 demo/AGENTS.md
 demo/CLAUDE.md

@@ -1,11 +1,13 @@
 {
   "name": "payload-supertext-docs-screenshots",
   "private": true,
-  "description": "Regenerates docs/images from the local demo. See docs/DEVELOPER.md -> Docs screenshots.",
+  "description": "Regenerates docs/images and records the demo movies from the local demo. See docs/DEVELOPER.md -> Docs screenshots and Demo movie.",
   "type": "module",
   "scripts": {
     "stand-in": "node stand-in.mjs",
-    "screenshots": "node screenshots.mjs"
+    "screenshots": "node screenshots.mjs",
+    "movie": "node movie.mjs",
+    "movie:install": "node movie-install.mjs"
   },
   "devDependencies": {
     "playwright": "^1.63.0"
