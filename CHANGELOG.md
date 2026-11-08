@@ -18,6 +18,7 @@ All notable changes to this project are documented here. Format: [Keep a Changel
 
 ### Changed
 
+- Tested with Payload 3.93 (the demo moved from Payload 3.92.1 to 3.93.0 and from Next.js 16.4.3 to 16.4.5; development dependencies on 3.93.0).
 - **Default languages** (bundled Supertext SDK 0.4.0, commit `6aaad33`): a locale nobody mapped now uses Supertext's obvious default instead of failing: `de` → `de-DE`, `en` → `en-US`, `fr` → `fr-FR`, `it` → `it-IT`, `pt` → `pt-PT`, `zh` → `zh-Hans`, `zh-TW` → `zh-Hant`, `sr` → `sr-Latn`, `es-ES` → `es`. Only locales without mapping and default (`en-IE`, `de-LI`, `gsw`, …) are still marked *no Supertext language yet* and fail with *has no Supertext language yet*; that message now points to *Supertext → Supertext settings*.
 - The `languageMap` and `politeness` options are now optional overrides of the settings screen (they win per locale; such a combo box is read-only). Existing configurations keep working unchanged.
 
