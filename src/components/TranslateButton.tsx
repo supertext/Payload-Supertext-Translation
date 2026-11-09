@@ -12,13 +12,19 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { SupertextI18nKey, supertextTranslations } from '../translations.js'
-import type { LocaleResult, StatusResponse, TranslateResponse } from '../types.js'
+import type { FileImportJob, FileImportResponse, LocaleResult, StatusResponse, TranslateResponse } from '../types.js'
 
 type Status = Pick<StatusResponse, 'apiKeyConfigured' | 'canTranslate' | 'locales'> & Partial<Pick<StatusResponse, 'languages'>>
 
+type Mode = 'translate' | 'export' | 'import'
+
+/** Same limit as the import endpoint, checked before the file is sent. */
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
 /**
  * "Translate with Supertext" control in the document header. Translates the saved
- * version of the document in the current locale into the locales the editor picks.
+ * version of the document in the current locale into the locales the editor picks,
+ * exports it as an XLIFF or HTML file for translation elsewhere, or imports such a file.
  */
 export function TranslateButton() {
   const { config } = useConfig()
@@ -31,6 +37,11 @@ export function TranslateButton() {
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<Status | null>(null)
   const [selected, setSelected] = useState<string[]>([])
+  const [mode, setMode] = useState<Mode>('translate')
+  const [format, setFormat] = useState<'xliff' | 'html'>('xliff')
+  const [file, setFile] = useState<File | null>(null)
+  const [includeChanged, setIncludeChanged] = useState(false)
+  const [summary, setSummary] = useState<FileImportJob[] | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
   const api = `${config.serverURL ?? ''}${config.routes.api}`
@@ -72,7 +83,7 @@ export function TranslateButton() {
   const unsaved = Boolean(collectionSlug) && !id
   const disabledReason = unsaved
     ? t('supertext:saveFirst')
-    : status && !status.apiKeyConfigured
+    : mode === 'translate' && status && !status.apiKeyConfigured
       ? t('supertext:noApiKey')
       : modified
         ? t('supertext:unsavedChanges')
@@ -80,7 +91,9 @@ export function TranslateButton() {
 
   // Locales without a Supertext language can't be chosen (the panel on the dashboard says how to map them).
   const unmapped = new Set((status?.languages ?? []).filter((l) => l.supertext === null).map((l) => l.locale))
-  const available = targets.filter((l) => !unmapped.has(l.code))
+  // Files may go to any translator: unmapped locales can be exported (with their Payload code).
+  const blocked = (code: string) => mode === 'translate' && unmapped.has(code)
+  const available = targets.filter((l) => !blocked(l.code))
 
   const toggle = (code: string) =>
     setSelected((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]))
@@ -117,6 +130,67 @@ export function TranslateButton() {
     }
   }
 
+  const exportFile = async () => {
+    setBusy(true)
+    try {
+      const res = await fetch(`${api}/supertext/export`, {
+        body: JSON.stringify({ collection: collectionSlug, format, global: globalSlug, id, sourceLocale, targetLocales: selected }),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null
+        toast.error(data?.error ?? t('supertext:failedHttp', { status: res.status }))
+        return
+      }
+      const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? 'supertext.xlf'
+      const url = URL.createObjectURL(await res.blob())
+      const a = document.createElement('a')
+      a.href = url
+      a.download = name
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    } catch (err) {
+      toast.error(t('supertext:serverUnreachable', { detail: err instanceof Error ? err.message : String(err) }))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const importFile = async () => {
+    if (!file) return
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error(t('supertext:file_too_large'))
+      return
+    }
+    setBusy(true)
+    setSummary(null)
+    try {
+      const res = await fetch(`${api}/supertext/import${includeChanged ? '?includeChanged=1' : ''}`, {
+        body: file,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        method: 'POST',
+      })
+      const data = (await res.json().catch(() => null)) as (FileImportResponse & { error?: string }) | null
+      if (!data?.jobs) {
+        toast.error(data?.error ?? t('supertext:failedHttp', { status: res.status }))
+        return
+      }
+      setSummary(data.jobs)
+    } catch (err) {
+      toast.error(t('supertext:serverUnreachable', { detail: err instanceof Error ? err.message : String(err) }))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const htmlInvalid = mode === 'export' && format === 'html' && selected.length !== 1
+  const name = (code: string) => targets.find((l) => l.code === code)?.label ?? code
+
   return (
     <div ref={panelRef} style={{ position: 'relative' }}>
       <Button
@@ -146,7 +220,24 @@ export function TranslateButton() {
             zIndex: 50,
           }}
         >
-          <strong style={{ display: 'block', marginBottom: 4 }}>{t('supertext:dialogTitle')}</strong>
+          <strong style={{ display: 'block', marginBottom: 8 }}>{t('supertext:dialogTitle')}</strong>
+          <div role="tablist" style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+            {(['translate', 'export', 'import'] as const).map((m) => (
+              <button
+                aria-selected={mode === m}
+                disabled={busy}
+                key={m}
+                onClick={() => setMode(m)}
+                role="tab"
+                style={{ ...linkStyle, fontWeight: mode === m ? 700 : 400, textDecoration: mode === m ? 'underline' : 'none' }}
+                type="button"
+              >
+                {t(m === 'translate' ? 'supertext:translate' : m === 'export' ? 'supertext:exportTab' : 'supertext:importTab')}
+              </button>
+            ))}
+          </div>
+          {mode !== 'import' && (
+          <>
           <p style={{ color: 'var(--theme-elevation-500)', fontSize: 13, margin: '0 0 12px' }}>
             {withBold(t('supertext:fromInto', { locale: MARK }), sourceLocale)}
           </p>
@@ -154,12 +245,12 @@ export function TranslateButton() {
             <label key={target.code} style={{ alignItems: 'center', display: 'flex', gap: 8, marginBottom: 6 }}>
               <input
                 checked={selected.includes(target.code)}
-                disabled={busy || unmapped.has(target.code)}
+                disabled={busy || blocked(target.code)}
                 onChange={() => toggle(target.code)}
                 type="checkbox"
               />
               {target.label} <span style={{ color: 'var(--theme-elevation-500)' }}>({target.code})</span>
-              {unmapped.has(target.code) && (
+              {blocked(target.code) && (
                 <span style={{ color: 'var(--theme-warning-500, #b26b00)', fontSize: 13 }}>
                   {t('supertext:noSupertextLanguage')}
                 </span>
@@ -179,6 +270,9 @@ export function TranslateButton() {
               {disabledReason}
             </p>
           )}
+          </>
+          )}
+          {mode === 'translate' && (
           <div style={{ marginTop: 12 }}>
             <Button
               buttonStyle="primary"
@@ -190,6 +284,79 @@ export function TranslateButton() {
               {busy ? t('supertext:translatingLong') : t('supertext:translateInto', { count: selected.length || '…' })}
             </Button>
           </div>
+          )}
+          {mode === 'export' && (
+            <div style={{ marginTop: 12 }}>
+              <strong style={{ display: 'block', fontSize: 13, marginBottom: 4 }}>{t('supertext:fileFormat')}</strong>
+              {(['xliff', 'html'] as const).map((f) => (
+                <label key={f} style={{ alignItems: 'center', display: 'flex', gap: 8, marginBottom: 4 }}>
+                  <input checked={format === f} disabled={busy} name="supertext-format" onChange={() => setFormat(f)} type="radio" />
+                  {t(f === 'xliff' ? 'supertext:formatXliff' : 'supertext:formatHtml')}
+                </label>
+              ))}
+              {htmlInvalid && (
+                <p style={{ color: 'var(--theme-warning-500, #b26b00)', fontSize: 13, margin: '4px 0 0' }}>{t('supertext:htmlOneLanguage')}</p>
+              )}
+              <div style={{ marginTop: 12 }}>
+                <Button
+                  buttonStyle="primary"
+                  disabled={busy || selected.length === 0 || unsaved || htmlInvalid}
+                  margin={false}
+                  onClick={exportFile}
+                  size="medium"
+                >
+                  {t('supertext:downloadFile')}
+                </Button>
+              </div>
+            </div>
+          )}
+          {mode === 'import' && (
+            <div>
+              <label style={{ display: 'block', fontSize: 13, marginBottom: 8 }}>
+                <strong style={{ display: 'block', marginBottom: 4 }}>{t('supertext:fileField')}</strong>
+                <input
+                  accept=".xlf,.xliff,.html,.htm,application/x-xliff+xml,text/html"
+                  disabled={busy}
+                  onChange={(e) => {
+                    setFile(e.target.files?.[0] ?? null)
+                    setSummary(null)
+                  }}
+                  type="file"
+                />
+              </label>
+              <label style={{ alignItems: 'flex-start', display: 'flex', fontSize: 13, gap: 8, maxWidth: 320 }}>
+                <input checked={includeChanged} disabled={busy} onChange={(e) => setIncludeChanged(e.target.checked)} type="checkbox" />
+                {t('supertext:includeChanged')}
+              </label>
+              <div style={{ marginTop: 12 }}>
+                <Button buttonStyle="primary" disabled={busy || !file} margin={false} onClick={importFile} size="medium">
+                  {busy ? t('supertext:importing') : t('supertext:importTab')}
+                </Button>
+              </div>
+              {summary && (
+                <ul aria-live="polite" style={{ fontSize: 13, listStyle: 'none', margin: '12px 0 0', maxWidth: 360, padding: 0 }}>
+                  {summary.map((job, i) => (
+                    <li key={i} style={{ marginBottom: 8 }}>
+                      <strong>
+                        {job.item} → {name(job.targetLocale)}
+                      </strong>
+                      {job.error ? (
+                        <div style={{ color: 'var(--theme-error-500, #b00020)' }}>{job.error}</div>
+                      ) : (
+                        <div>
+                          <div>{t('supertext:summaryOk', { count: job.imported ?? 0 })}</div>
+                          {(job.sourceChanged ?? 0) > 0 && <div>{t('supertext:summaryChanged', { count: job.sourceChanged })}</div>}
+                          {(job.untranslated ?? 0) > 0 && <div>{t('supertext:summaryUntranslated', { count: job.untranslated })}</div>}
+                          {(job.invalid ?? 0) > 0 && <div>{t('supertext:summaryInvalid', { count: job.invalid })}</div>}
+                          {(job.missing ?? 0) > 0 && <div>{t('supertext:summaryMissing', { count: job.missing })}</div>}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

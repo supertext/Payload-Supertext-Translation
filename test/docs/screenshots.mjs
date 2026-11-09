@@ -97,5 +97,21 @@ await page.getByText('Locale:', { exact: false }).first().click({ force: true })
 await page.waitForTimeout(600)
 await shot('locales', { x: 700, y: 0, width: 700, height: 300 })
 
+// --- Installation guide: the language mapping (Supertext settings) ------------
+await page.goto(`${B}/admin/globals/supertext-settings`)
+const mapping = page.locator('.field-type.group-field').first()
+await mapping.getByText('Language mapping').first().waitFor({ timeout: 60000 })
+await tidy()
+await page.waitForTimeout(800)
+await shot('settings-languages', pad(await mapping.boundingBox()))
+// The combo box opened: Supertext's languages, "Name (code)".
+await mapping.locator('.react-select').nth(1).click()
+await page.waitForTimeout(500)
+const menu = page.locator('.rs__menu').first()
+const m = await menu.boundingBox()
+const box = await mapping.boundingBox()
+await shot('settings-languages-open', pad({ x: box.x, y: box.y, width: box.width, height: m.y + m.height - box.y }))
+await page.keyboard.press('Escape')
+
 await browser.close()
 console.log(`Screenshots written to ${OUT}`)

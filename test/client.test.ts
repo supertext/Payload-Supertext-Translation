@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { politenessForTarget, sourceCode, targetCode, targetCodeOrNull } from '../src/languages.js'
-import { SupertextClient, SupertextError } from '../src/supertext/client.js'
+import { createClient, resolveReviewUrl } from '../src/endpoints.js'
+import { REVIEW_URL, SupertextClient, SupertextError } from '../src/supertext/client.js'
+import { pluginVersion } from '../src/versions.js'
 import { fakeSupertext } from './fakeSupertext.js'
 
 const noSleep = async () => {}
@@ -87,6 +89,68 @@ describe('SupertextClient', () => {
   })
 })
 
+describe('Translation review', () => {
+  it('sends review locales to the review service (all four calls, same key), the others directly', async () => {
+    const fake = fakeSupertext()
+    const direct = client(fake, { reviewUrl: 'https://review.test/v1/' })
+    expect(direct.forReview(false)).toBe(direct)
+    const review = direct.forReview(true)
+    expect(review).not.toBe(direct)
+    expect(direct.forReview(true)).toBe(review)
+
+    expect(await review.translateHtml({ html: '<p data-st-id="0">Hallo</p>', targetLang: 'fr-CH' })).toContain('[fr-CH] Hallo')
+    expect(fake.calls.map((c) => `${c.method} ${c.url}`)).toEqual([
+      'POST https://review.test/v1/translate/ai/file',
+      'GET https://review.test/v1/translate/ai/file/f1/status',
+      'GET https://review.test/v1/translate/ai/file/f1/translation',
+      'DELETE https://review.test/v1/translate/ai/file/f1',
+    ])
+
+    fake.calls.length = 0
+    await direct.translateHtml({ html: '<p data-st-id="0">Hallo</p>', targetLang: 'de-CH' })
+    await direct.validateApiKey()
+    expect(fake.calls.every((c) => c.url.startsWith('https://api.test/v1/'))).toBe(true)
+  })
+
+  it('is off without a review URL or with the API URL itself', () => {
+    const fake = fakeSupertext()
+    for (const reviewUrl of [undefined, '', '  ', 'https://api.test/v1/']) {
+      const c = client(fake, { reviewUrl })
+      expect(c.forReview(true), String(reviewUrl)).toBe(c)
+    }
+  })
+
+  it('defaults to Supertext’s review service; SUPERTEXT_REVIEW_URL and the option change it, empty turns it off', async () => {
+    const before = process.env.SUPERTEXT_REVIEW_URL
+    try {
+      delete process.env.SUPERTEXT_REVIEW_URL
+      expect(resolveReviewUrl({})).toBe(REVIEW_URL)
+      expect(REVIEW_URL).toBe('https://localizationreview-production.up.railway.app/v1/')
+      process.env.SUPERTEXT_REVIEW_URL = 'http://localhost:3000/v1/'
+      expect(resolveReviewUrl({})).toBe('http://localhost:3000/v1/')
+      expect(resolveReviewUrl({ reviewUrl: '' })).toBe('')
+      process.env.SUPERTEXT_REVIEW_URL = ''
+      const c = createClient({ apiKey: 'test-key' })
+      expect(c.forReview(true)).toBe(c)
+    } finally {
+      if (before === undefined) delete process.env.SUPERTEXT_REVIEW_URL
+      else process.env.SUPERTEXT_REVIEW_URL = before
+    }
+  })
+
+  it('names the plugin and its version in the User-Agent', async () => {
+    let agent = ''
+    const fake = fakeSupertext()
+    const fetchSpy = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      agent = new Headers(init?.headers).get('User-Agent') ?? ''
+      return fake.fetch(input, init)
+    }) as typeof fetch
+    await client(fake, { fetch: fetchSpy }).validateApiKey()
+    expect(pluginVersion()).toMatch(/^\d+\.\d+\.\d+/)
+    expect(agent).toContain(`Payload-Supertext-Translation/${pluginVersion()}`)
+  })
+})
+
 describe('language codes', () => {
   it('sends a bare source language', () => {
     expect(sourceCode('en')).toBe('en')
@@ -104,19 +168,27 @@ describe('language codes', () => {
     expect(targetCode('es')).toBe('es')
     expect(targetCode('NL')).toBe('nl')
   })
-  it('guesses no region: unmapped locales are an unsupported_language error', () => {
-    for (const locale of ['de', 'en', 'fr', 'zh', 'es-ES', 'sl-SI', 'xx']) {
+  it('uses the SDK default where one is obvious', () => {
+    expect(targetCode('de')).toBe('de-DE')
+    expect(targetCode('en')).toBe('en-US')
+    expect(targetCode('fr')).toBe('fr-FR')
+    expect(targetCode('zh')).toBe('zh-Hans')
+    expect(targetCode('zh-TW')).toBe('zh-Hant')
+    expect(targetCode('es-ES')).toBe('es')
+  })
+  it('guesses nothing else: locales without mapping and default are an unsupported_language error', () => {
+    for (const locale of ['en-IE', 'de-LI', 'gsw', 'sr-RS', 'xx']) {
       expect(() => targetCode(locale), locale).toThrow(SupertextError)
       expect(targetCodeOrNull(locale), locale).toBeNull()
     }
     const err = (() => {
       try {
-        targetCode('de')
+        targetCode('de-LI')
       } catch (e) {
         return e
       }
     })()
-    expect(err).toMatchObject({ code: 'unsupported_language', targetLang: 'de' })
+    expect(err).toMatchObject({ code: 'unsupported_language', targetLang: 'de-LI' })
   })
   it('lets the mapping win', () => {
     expect(targetCode('de', { de: 'de-CH' })).toBe('de-CH')

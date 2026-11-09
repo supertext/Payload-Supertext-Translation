@@ -134,14 +134,20 @@ describe('reporting glue', () => {
 })
 
 describe('languageStatus', () => {
-  it('shows unmapped locales and a tone the target lacks', () => {
+  it('shows where each code comes from, locales without one and a tone the target lacks', () => {
     expect(
-      languageStatus(['de-CH', 'en-US', 'de', 'zh'], { languageMap: { zh: 'zh-Hans' }, politeness: { 'de-CH': 'more', 'en-US': 'less' } }),
+      languageStatus(
+        ['de-CH', 'en-US', 'de', 'zh', 'it', 'de-LI'],
+        { languageMap: { zh: 'zh-Hant' }, politeness: { 'de-CH': 'more', 'en-US': 'less' } },
+        { languageMap: { it: 'it-CH', zh: 'zh-Hans' }, politeness: { it: 'less' }, review: {} },
+      ),
     ).toEqual([
-      { locale: 'de-CH', politeness: 'more', politenessSupported: true, supertext: 'de-CH' },
-      { locale: 'en-US', politeness: 'less', politenessSupported: false, supertext: 'en-US' },
-      { locale: 'de', politeness: 'default', politenessSupported: true, supertext: null },
-      { locale: 'zh', politeness: 'default', politenessSupported: true, supertext: 'zh-Hans' },
+      { locale: 'de-CH', origin: 'automatic', politeness: 'more', politenessSupported: true, supertext: 'de-CH' },
+      { locale: 'en-US', origin: 'automatic', politeness: 'less', politenessSupported: false, supertext: 'en-US' },
+      { locale: 'de', origin: 'automatic', politeness: 'default', politenessSupported: true, supertext: 'de-DE' },
+      { locale: 'zh', origin: 'option', politeness: 'default', politenessSupported: true, supertext: 'zh-Hant' },
+      { locale: 'it', origin: 'settings', politeness: 'less', politenessSupported: true, supertext: 'it-CH' },
+      { locale: 'de-LI', origin: null, politeness: 'default', politenessSupported: true, supertext: null },
     ])
   })
 })

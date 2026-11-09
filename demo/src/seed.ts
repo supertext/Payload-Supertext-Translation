@@ -61,8 +61,8 @@ async function ensureAccounts(payload: Payload): Promise<void> {
 }
 
 /**
- * Runs on every start: demo accounts (above), and English sample content when
- * there are no pages yet. Without any DEMO_* account variables, Payload shows its
+ * Runs on every start: demo accounts (above), and English sample content (plus the
+ * formal tone for German in the Supertext settings) when there are no pages yet. Without any DEMO_* account variables, Payload shows its
  * "create first user" screen instead.
  */
 export async function seed(payload: Payload): Promise<void> {
@@ -70,6 +70,9 @@ export async function seed(payload: Payload): Promise<void> {
 
   const { totalDocs: pages } = await payload.count({ collection: 'pages' })
   if (pages > 0) return
+
+  // First start: German formal (Sie) in the Supertext settings; the other combo boxes keep their suggestion.
+  await payload.updateGlobal({ data: { languages: { 'l_de_CH_tone': 'more' } }, slug: 'supertext-settings' })
 
   await payload.create({
     collection: 'pages',

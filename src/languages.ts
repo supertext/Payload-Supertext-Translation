@@ -4,12 +4,17 @@ import type { Politeness } from './supertext/client.js'
 
 /**
  * Payload locale codes → Supertext codes, with the Supertext SDK's rules (the same in every
- * Supertext plugin, no guessing): the `languageMap` entry wins; otherwise a locale that equals
- * a Supertext code apart from case and `_`/`-` is used (`de-CH`, `fr_ch`, `es`); anything else
+ * Supertext plugin): the mapping wins (the `languageMap` option, else the Supertext settings'
+ * combo box); otherwise a locale that equals a Supertext code apart from case and `_`/`-` is used
+ * (`de-CH`, `fr_ch`, `es`); otherwise the SDK's default where one is obvious (`de` → `de-DE`,
+ * `en` → `en-US`, `zh` → `zh-Hans`, `es-ES` → `es`); anything else (`en-IE`, `de-LI`, `gsw`)
  * throws `SupertextError('unsupported_language')` and nothing is sent. Sources are bare
  * (`de-CH` → `de`).
  */
-export const SUPERTEXT_TARGETS: readonly TargetLanguage[] = Languages.TARGETS
+export const SUPERTEXT_TARGETS: readonly TargetLanguage[] = Languages.targetOptions()
+
+/** What the settings' combo box preselects: exact match, else the SDK default, else null ("— choose —"). */
+export const suggestTargetCode = (locale: string): string | null => Languages.suggestTarget(locale)
 
 export function targetCode(locale: string, map: Record<string, string> = {}): string {
   return Languages.target(locale, map)

@@ -2,19 +2,26 @@ import type { Config, CustomComponent } from 'payload'
 
 import { createEndpoints } from './endpoints.js'
 import { withSupertextTranslations } from './i18n.js'
+import { settingsGlobal } from './settings.js'
 import type { SupertextTranslationOptions } from './types.js'
 
 export { collectSegments, isOptedOut } from './collect.js'
-export { createClient, ENDPOINT_BASE } from './endpoints.js'
+export { createClient, ENDPOINT_BASE, resolveReviewUrl } from './endpoints.js'
+export { exportItem, formatReference, importFile, MAX_UPLOAD_BYTES, parseReference } from './files.js'
+export type { ExportedFile, FileFormat, ItemReference } from './files.js'
 export { sourceCode, SUPERTEXT_TARGETS, targetCode } from './languages.js'
 export { PING_PATH, PLUGIN_NAME, Reporting } from './reporting.js'
 export { applyTranslations, buildHtml, parseHtml } from './segments.js'
-export { SUPERTEXT_ENVIRONMENTS, SupertextClient, SupertextError } from './supertext/client.js'
+export { loadSettings, SETTINGS_SLUG, settingsGlobal } from './settings.js'
+export { REVIEW_URL, SUPERTEXT_ENVIRONMENTS, SupertextClient, SupertextError } from './supertext/client.js'
 export type { Politeness, SupertextEnvironment, SupertextErrorCode } from './supertext/client.js'
 export { translateDocument } from './translate.js'
 export { SUPERTEXT_I18N_NAMESPACE, supertextTranslations } from './translations.js'
 export type { SupertextTranslationKey } from './translations.js'
 export type {
+  FileExportRequestBody,
+  FileImportJob,
+  FileImportResponse,
   KeyCheckStatus,
   LanguageStatus,
   LocaleResult,
@@ -34,7 +41,8 @@ const button: CustomComponent = { path: TRANSLATE_BUTTON_PATH }
 
 /**
  * Payload 3 plugin: adds a "Translate with Supertext" control to the edit view of the
- * configured collections and globals, plus the `/api/supertext/*` endpoints behind it.
+ * configured collections and globals, the `/api/supertext/*` endpoints behind it, and the
+ * *Supertext settings* global (one language combo box per locale).
  *
  * ```ts
  * plugins: [supertextTranslation({ collections: ['pages', 'posts'], globals: ['header'] })]
@@ -43,7 +51,9 @@ const button: CustomComponent = { path: TRANSLATE_BUTTON_PATH }
 export const supertextTranslation =
   (options: SupertextTranslationOptions = {}) =>
   (incoming: Config): Config => {
-    if (options.disabled) return incoming
+    // The settings global stays when disabled (hidden), so the database schema doesn't change.
+    const settings = settingsGlobal(incoming.localization, options)
+    if (options.disabled) return { ...incoming, globals: [...(incoming.globals ?? []), settings] }
 
     const collectionSlugs = new Set<string>(options.collections ?? [])
     const globalSlugs = new Set<string>(options.globals ?? [])
@@ -84,7 +94,8 @@ export const supertextTranslation =
       ),
       endpoints: [...(incoming.endpoints ?? []), ...createEndpoints(options)],
       i18n: withSupertextTranslations(incoming.i18n),
-      globals: (incoming.globals ?? []).map((global) =>
+      globals: [
+        ...(incoming.globals ?? []).map((global) =>
         globalSlugs.has(global.slug)
           ? {
               ...global,
@@ -103,7 +114,9 @@ export const supertextTranslation =
               },
             }
           : global,
-      ),
+        ),
+        settings,
+      ],
     }
   }
 

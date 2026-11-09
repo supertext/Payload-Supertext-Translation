@@ -11,9 +11,9 @@ const API_KEY_URL = 'https://www.supertext.com/en/integrations/api'
 
 /**
  * Supertext panel on the admin dashboard: plugin version, the latest API key check (with
- * "Check again"), how each locale is sent to Supertext, and the version-report setting.
- * The plugin's settings are code (plugin options, environment variables), so this panel
- * only shows them.
+ * "Check again"), how each locale is sent to Supertext (with a link to the *Supertext settings*,
+ * where the language mapping is chosen), and the version-report setting. The other settings are
+ * code (plugin options, environment variables), so this panel only shows them.
  */
 export function SupertextStatus() {
   const { config } = useConfig()
@@ -115,7 +115,10 @@ export function SupertextStatus() {
               </td>
               <td style={cell}>
                 {l.supertext ? (
-                  <code>{l.supertext}</code>
+                  <>
+                    <code>{l.supertext}</code>
+                    {l.origin && <span style={muted}> · {t(ORIGIN[l.origin])}</span>}
+                  </>
                 ) : (
                   <span style={{ color: 'var(--theme-warning-500, #b26b00)' }}>{t('supertext:notMapped')}</span>
                 )}
@@ -128,6 +131,9 @@ export function SupertextStatus() {
           ))}
         </tbody>
       </table>
+      <p style={{ margin: '-8px 0 16px' }}>
+        <a href={status.settingsUrl}>{t('supertext:settingsLink')}</a>
+      </p>
 
       <h3 style={{ margin: '0 0 4px' }}>{t('supertext:reportsLabel')}</h3>
       <p style={{ margin: 0 }}>{status.reports.enabled ? t('supertext:reportsOn') : t('supertext:reportsOff')}</p>
@@ -138,6 +144,12 @@ export function SupertextStatus() {
     </section>
   )
 }
+
+const ORIGIN = {
+  automatic: 'supertext:originAutomatic',
+  option: 'supertext:originOption',
+  settings: 'supertext:originSettings',
+} as const
 
 const cell = {
   borderBottom: '1px solid var(--theme-elevation-100)',

@@ -42,7 +42,8 @@ const START = /<([a-zA-Z][a-zA-Z0-9]*)(?=[\s>/])[^>]*?\sdata-st-id\s*=\s*(?:"(\d
 const ENTITY = /&(#[xX][0-9a-fA-F]+|#[0-9]+|amp|lt|gt|quot|apos|nbsp);/g
 const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
 
-function decodeEntities(text: string): string {
+/** Decodes the entities Supertext writes (numeric, amp, lt, gt, quot, apos, nbsp); others stay as they are. */
+export function decodeEntities(text: string): string {
   return text.replace(ENTITY, (match, entity: string) => {
     if (entity[0] !== '#') return NAMED[entity]!
     const hex = entity[1] === 'x' || entity[1] === 'X'
@@ -54,7 +55,7 @@ function decodeEntities(text: string): string {
 }
 
 /** Plain text back from a translated segment: line breaks from <br>, tags removed, whitespace collapsed. */
-function toPlainText(inner: string): string {
+export function toPlainText(inner: string): string {
   const text = inner
     .replace(/<br\s*\/?>/gi, '\u001e') // keep line breaks through the whitespace collapse
     .replace(/<[^>]*>/g, '')
@@ -73,7 +74,17 @@ const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
  * flags decide how each is read; their texts are not used.
  */
 export function parse(html: string, segments: readonly Pick<Segment, 'html'>[]): (string | null)[] {
-  const out: (string | null)[] = segments.map(() => null)
+  const found = readSegments(html, (id) => segments[id]?.html ?? null)
+  return segments.map((_, id) => found.get(id) ?? null)
+}
+
+/**
+ * The texts of the elements carrying data-st-id, read as HTML or plain text as
+ * `kind(id)` says (null: not wanted). First element per id wins. Internal: also
+ * used for translation files, whose ids come from an uploaded file.
+ */
+export function readSegments(html: string, kind: (id: number) => boolean | null): Map<number, string> {
+  const out = new Map<number, string>()
   const start = new RegExp(START.source, 'g')
   let m: RegExpExecArray | null
   while ((m = start.exec(html))) {
@@ -97,10 +108,10 @@ export function parse(html: string, segments: readonly Pick<Segment, 'html'>[]):
       }
     }
     if (end < 0) continue // no closing tag: ignore, keep scanning after the start tag
-    const segment = segments[id]
-    if (segment && out[id] === null) {
+    const asHtml = Number.isSafeInteger(id) ? kind(id) : null
+    if (asHtml !== null && !out.has(id)) {
       const inner = html.slice(contentStart, end)
-      out[id] = segment.html ? inner.replace(/^[ \t\n\r\f]+|[ \t\n\r\f]+$/g, '') : toPlainText(inner)
+      out.set(id, asHtml ? inner.replace(/^[ \t\n\r\f]+|[ \t\n\r\f]+$/g, '') : toPlainText(inner))
     }
     start.lastIndex = after
   }

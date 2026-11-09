@@ -22,10 +22,9 @@ import type { KeyCheck, PingResponse, ReporterOptions, ReporterResult, ReporterS
 import { apiKeyFingerprint, SupertextClient } from './vendor/supertext-sdk/v1/index.js'
 import type { SupertextClientOptions } from './vendor/supertext-sdk/v1/index.js'
 import { SDK_VERSION } from './vendor/supertext-sdk/version.js'
-import { payloadVersion, pluginVersion } from './versions.js'
+import { payloadVersion, PLUGIN_NAME, pluginVersion, userAgent } from './versions.js'
 
-/** The plugin's GitHub repository name (the center reads its releases from there). */
-export const PLUGIN_NAME = 'Payload-Supertext-Translation'
+export { PLUGIN_NAME }
 /** Key of the reporter's state in Payload's key-value store. */
 export const STATE_KEY = 'supertext-reporter'
 /** The ping endpoint, below Payload's API route (`/api/supertext/ping`). */
@@ -125,7 +124,7 @@ export class Reporting {
     const { clientOptions: overrideClientOptions, ...overrides } = this.options.reporterOverrides ?? {}
     const clientOptions: SupertextClientOptions = {
       baseUrl: this.options.apiBaseUrl,
-      userAgent: 'payload-supertext-translation',
+      userAgent: userAgent(),
       ...(overrides.now ? { now: overrides.now } : {}),
       ...overrideClientOptions,
     }

@@ -55,9 +55,8 @@ export default buildConfig({
       collections: ['pages'],
       environment: (process.env.SUPERTEXT_ENVIRONMENT as 'live' | 'staging' | 'testing' | undefined) ?? 'live',
       globals: ['header'],
-      // de-CH, fr-CH and it-CH are Supertext codes already; `en` is no target code (en-US, en-GB are).
-      languageMap: { en: 'en-US' },
-      politeness: { 'de-CH': 'more' },
+      // The language mapping is chosen under Supertext → Supertext settings (de-CH, fr-CH and
+      // it-CH are Supertext codes already, `en` defaults to en-US); the seed sets German to formal.
     }),
   ],
   secret: process.env.PAYLOAD_SECRET || 'dev-only-secret-change-me',

@@ -4,6 +4,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const PACKAGE_NAME = 'payload-supertext-translation'
+/** The plugin's GitHub repository name (the center reads its releases from there). */
+export const PLUGIN_NAME = 'Payload-Supertext-Translation'
 
 const readVersion = (file: string, name: string): string | null => {
   try {
@@ -76,6 +78,11 @@ export function pluginVersion(): string | null {
     }
     return (here ? searchUp(here, PACKAGE_NAME) : null) ?? fromApp(PACKAGE_NAME)
   })
+}
+
+/** User-Agent of the plugin's requests to Supertext: `Payload-Supertext-Translation/<version>`. */
+export function userAgent(): string {
+  return `${PLUGIN_NAME}/${pluginVersion() ?? '0.0.0'}`
 }
 
 /** The installed Payload version (its package.json in the app), or null. */
