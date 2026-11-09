@@ -15,6 +15,8 @@ All notable changes to this project are documented here. Format: [Keep a Changel
 - **Supertext settings** (admin sidebar → *Supertext* → *Supertext settings*): one combo box per Payload locale (source locale included) with Supertext's languages as *Name (code)*, preselected with Supertext's suggestion, plus a formal/informal select where the chosen language offers one. Stored in a new global `supertext-settings`; only Supertext's codes can be saved. New option `settingsAccess` (default: `access`, else any logged-in user) decides who may change it. **SQL databases: create a migration after updating** (`npx payload migrate:create supertext_settings`), and again whenever you add or remove a locale.
 - The Supertext panel shows where each locale's code comes from (automatic, chosen in the settings, or the `languageMap` option) and links to the settings.
 - Support: the Supertext support form is linked in the README, the user guide and GitHub's "New issue" page.
+- Docs: demo movie in the README (`docs/images/demo.gif`, recorded from the demo against the stand-in with `npm run movie` in `test/docs`; the MP4 version, not committed, is narrated with the Piper voice “alba”).
+- Docs: install and configuration movie (`npm run movie:install` in `test/docs`): `npm install`, the plugin in `payload.config.ts`, the import map and migration, `SUPERTEXT_API_KEY`, the key check on the Supertext panel, the language mapping in *Supertext settings* and the Translate button; narrated MP4, not committed.
 
 ### Changed
 
