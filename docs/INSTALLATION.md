@@ -7,7 +7,7 @@ For administrators and developers who set up a Payload project. Editors: see the
 | | |
 | --- | --- |
 | Payload | 3.x (tested with 3.93) |
-| Node.js | 20.9 or newer (Payload 3.92 and later need 22.23.4 or newer, or 24.22.1 or newer) |
+| Node.js | 22 or newer (Payload 3.92 and later need 22.23.4 or newer, or 24.22.1 or newer). Node.js 20 is no longer supported (end of life since 30 April 2026). |
 | React | 19 (as required by Payload 3) |
 | Database | any Payload adapter (tested with SQLite and Postgres; MongoDB uses the same Local API) |
 | Payload localization | must be enabled — the plugin translates between your configured locales |

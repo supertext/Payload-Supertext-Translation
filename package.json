@@ -50,7 +50,7 @@
     "prepublishOnly": "npm run clean && npm run build && npm test"
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=22.0.0"
   },
   "peerDependencies": {
     "@payloadcms/ui": "^3.0.0",
@@ -70,7 +70,11 @@
     "payload": "^3.93.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "dompurify": "^3.4.17",
+    "happy-dom": "^21.0.4"
   }
 }

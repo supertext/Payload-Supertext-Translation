@@ -194,7 +194,7 @@ Vitest, in `test/`:
 
 ## CI / deploy
 
-`.github/workflows/ci.yml` runs typecheck, tests and build on Node 20, 22, 24 and 26 for pushes to `main` and pull requests.
+`.github/workflows/ci.yml` runs typecheck, tests and build on Node 22, 24 and 26 for pushes to `main` and pull requests.
 
 ### Demo app (`demo/`)
 
@@ -288,7 +288,11 @@ Dependabot (`.github/dependabot.yml`) opens weekly pull requests: minor and patc
 
 `.github/workflows/dependabot-merge.yml` merges a minor or patch package update by itself once every other check on its pull request has passed (it waits up to 85 minutes and leaves the pull request alone if a check fails). GitHub Actions updates and majors stay for a person: the workflow's built-in token can't merge changes to workflow files, and a major needs a decision. Merges by the workflow don't start CI on `main`; the weekly health check looks at `main`.
 
-Some major versions are ignored on purpose: TypeScript (7.x is the native compiler, which the type-checking and build tools here don't support yet) and `@types/node` (the types must match the oldest Node version the plugin supports, not the newest). Lift an ignore rule when the plugin moves to the new version.
+One major version is ignored on purpose: `@types/node` (the types must match the oldest Node version the plugin supports, 22, not the newest). Lift the rule when the plugin moves to a new minimum Node version.
+
+The plugin is type-checked and built with TypeScript 7 (the native compiler, `tsc`). The demo stays on TypeScript 5: Next.js type-checks through TypeScript's JavaScript API, which TypeScript 7 doesn't have yet.
+
+`overrides` in `package.json` force the fixed versions of two packages that dependencies pin to vulnerable releases (security advisories, November 2026): `dompurify` 3.4.17 or newer (pinned by `monaco-editor` in `@payloadcms/ui`) and `happy-dom` 21.0.4 or newer (`@lexical/headless` 0.50 asks for 20; Lexical 0.53 itself moved to 21). `demo/package.json` has the `happy-dom` override too. Remove them once Payload's dependencies ship the fixed versions. Remaining advisories (low and moderate, development tools only): `esbuild` 0.18 inside `drizzle-kit`'s `@esbuild-kit` loader and `deepmerge` (no fixed version).
 
 ## Code quality and security checks
 

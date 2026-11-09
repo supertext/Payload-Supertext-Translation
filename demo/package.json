@@ -19,7 +19,7 @@
     "@payloadcms/richtext-lexical": "3.93.0",
     "@payloadcms/translations": "^3.93.0",
     "@payloadcms/ui": "3.93.0",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "graphql": "^16.8.1",
     "next": "16.4.5",
     "payload": "3.93.0",
@@ -34,6 +34,9 @@
     "typescript": "5.7.3"
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": "^22.23.4 || >=24.22.1"
+  },
+  "overrides": {
+    "happy-dom": "^21.0.4"
   }
 }
