@@ -100,12 +100,12 @@ Errors are the SDK's `SupertextError` with a stable `code`: `missing_api_key`, `
 
 ### Supertext SDK
 
-All Supertext calls go through the [Supertext SDK](https://github.com/Supertext/Supertext-API-SDK-and-Guide) (`sdk/typescript`), the shared client of all Supertext plugins: it provides the client and the API key check (`checkApiKey()`, `apiKeyFingerprint`, `SDK_VERSION`); version reports and the ping are in *Supertext Plugin Health* (below). Its TypeScript sources (the whole `src/` tree, with the API in the versioned folder `v1/`) are copied into `src/vendor/supertext-sdk/` and compiled with the plugin into `dist/vendor/supertext-sdk/`, so sites install nothing besides the plugin; `COMMIT` and `VERSION` name the SDK commit and version. Never edit the copy: fix the SDK repository and copy it again:
+All Supertext calls go through the [Supertext SDK](https://github.com/Supertext/Supertext-API-SDK-Guide) (`sdk/typescript`), the shared client of all Supertext plugins: it provides the client and the API key check (`checkApiKey()`, `apiKeyFingerprint`, `SDK_VERSION`); version reports and the ping are in *Supertext Plugin Health* (below). Its TypeScript sources (the whole `src/` tree, with the API in the versioned folder `v1/`) are copied into `src/vendor/supertext-sdk/` and compiled with the plugin into `dist/vendor/supertext-sdk/`, so sites install nothing besides the plugin; `COMMIT` and `VERSION` name the SDK commit and version. Never edit the copy: fix the SDK repository and copy it again:
 
 ```bash
 scripts/vendor-sdk.sh                  # latest main of the SDK repository
 scripts/vendor-sdk.sh <commit-or-tag>
-SDK_DIR=../Supertext-API-SDK-and-Guide scripts/vendor-sdk.sh   # a local clone
+SDK_DIR=../Supertext-API-SDK-Guide scripts/vendor-sdk.sh   # a local clone
 ```
 
 Then run typecheck, tests and build, and note the update in `CHANGELOG.md`. The plugin imports the API from `src/vendor/supertext-sdk/v1/index.js` (the SDK's `supertext-sdk/v1`) and `SDK_VERSION` from `src/vendor/supertext-sdk/version.js`. `src/supertext/client.ts` wraps the SDK client (options in milliseconds, a `fetch` for tests, the User-Agent `supertext-sdk-typescript Payload-Supertext-Translation/<version>`, the version from package.json as in the reports, `versions.ts` → `userAgent()`) and keeps the plugin's exported `SupertextClient`, `SupertextError` and `SUPERTEXT_ENVIRONMENTS`.

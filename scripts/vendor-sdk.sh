@@ -2,7 +2,7 @@
 # Copies the Supertext TypeScript SDK's sources into src/vendor/supertext-sdk, where the
 # plugin's own TypeScript build compiles them into dist/ with the rest of the plugin, so
 # sites install nothing besides the plugin.
-# Source: https://github.com/Supertext/Supertext-API-SDK-and-Guide (sdk/typescript/src).
+# Source: https://github.com/Supertext/Supertext-API-SDK-Guide (sdk/typescript/src).
 #
 #   scripts/vendor-sdk.sh [commit-or-branch]        (default: main)
 #   SDK_DIR=/path/to/clone scripts/vendor-sdk.sh    (use a local clone as it is)
@@ -16,7 +16,7 @@ trap 'rm -rf "$work"' EXIT
 if [ -n "${SDK_DIR:-}" ]; then
   src="$(cd "$SDK_DIR" && pwd)"
 else
-  git clone -q https://github.com/Supertext/Supertext-API-SDK-and-Guide "$work/sdk"
+  git clone -q https://github.com/Supertext/Supertext-API-SDK-Guide "$work/sdk"
   git -C "$work/sdk" checkout -q "$ref"
   src="$work/sdk"
 fi
@@ -33,7 +33,7 @@ printf '%s\n' "$version" > "$dest/VERSION"
 cat > "$dest/README.md" <<EOT
 # Supertext SDK (bundled copy)
 
-TypeScript part of the [Supertext SDK](https://github.com/Supertext/Supertext-API-SDK-and-Guide),
+TypeScript part of the [Supertext SDK](https://github.com/Supertext/Supertext-API-SDK-Guide),
 version $version, commit \`$commit\`, compiled with the plugin.
 
 Don't edit these files: fix the SDK in its own repository, then run \`scripts/vendor-sdk.sh\`.
