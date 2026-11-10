@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Format: [Keep a Changel
 
 ## [Unreleased]
 
+### Removed
+
+- Support for Node.js 20 (end of life since 30 April 2026). The plugin now needs Node.js 22 or newer (`engines`); CI tests Node 22, 24 and 26.
+
+### Security
+
+- The development setup and the demo force the fixed versions of `dompurify` (3.4.17, XSS fixes; pinned by Payload's code editor) and `happy-dom` (21.0.4, used by Lexical's headless editor) with npm `overrides`; the demo also takes the fixed `fast-uri`. No change to the plugin itself.
+
 ### Added
 
 - Support for Node.js 24 and 26, tested in CI next to Node 20 and 22. Tested with Payload 3.92 (the demo runs 3.92.1 with Next.js 16.4.3). Payload 3.92 itself needs Node.js 22.23.4 or newer; the plugin still runs on Node 20 with older Payload 3 versions.
@@ -20,6 +28,7 @@ All notable changes to this project are documented here. Format: [Keep a Changel
 
 ### Changed
 
+- Development: the plugin is type-checked and built with TypeScript 7 (from 5.9). The demo moved from cross-env 7 to 10 and needs Node.js 22.23.4 or newer, or 24.22.1 or newer, like Payload 3.93.
 - Tested with Payload 3.93 (the demo moved from Payload 3.92.1 to 3.93.0 and from Next.js 16.4.3 to 16.4.5; development dependencies on 3.93.0).
 - **Default languages** (bundled Supertext SDK 0.4.0, commit `6aaad33`): a locale nobody mapped now uses Supertext's obvious default instead of failing: `de` → `de-DE`, `en` → `en-US`, `fr` → `fr-FR`, `it` → `it-IT`, `pt` → `pt-PT`, `zh` → `zh-Hans`, `zh-TW` → `zh-Hant`, `sr` → `sr-Latn`, `es-ES` → `es`. Only locales without mapping and default (`en-IE`, `de-LI`, `gsw`, …) are still marked *no Supertext language yet* and fail with *has no Supertext language yet*; that message now points to *Supertext → Supertext settings*.
 - The `languageMap` and `politeness` options are now optional overrides of the settings screen (they win per locale; such a combo box is read-only). Existing configurations keep working unchanged.
