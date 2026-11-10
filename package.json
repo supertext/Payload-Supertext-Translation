@@ -1,6 +1,6 @@
 {
   "name": "payload-supertext-translation",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Supertext AI translation for Payload CMS 3 localized collections and globals",
   "license": "MIT",
   "author": "Supertext AG",

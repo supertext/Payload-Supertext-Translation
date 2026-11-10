@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Format: [Keep a Changel
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-10
+
+First stable release. Every plugin release is now tested end to end against the live Supertext API (`.github/workflows/e2e.yml`).
+
 ### Removed
 
 - Support for Node.js 20 (end of life since 30 April 2026). The plugin now needs Node.js 22 or newer (`engines`); CI tests Node 22, 24 and 26.
