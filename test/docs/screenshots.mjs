@@ -16,7 +16,22 @@ const OUT = new URL('../../docs/images', import.meta.url).pathname
 
 const browser = await chromium.launch()
 const page = await (await browser.newContext({ viewport: { width: 1400, height: 940 } })).newPage()
-const shot = (name, clip) => page.screenshot({ path: `${OUT}/${name}.png`, ...(clip ? { clip } : {}) })
+// Dates change with every run (Last Modified, Created, the key check's time): show fixed ones,
+// so the images only change when the UI does.
+const freezeDates = () =>
+  page.evaluate(() => {
+    const long = /\b(January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}(st|nd|rd|th) \d{4}, \d{1,2}:\d{2} [AP]M\b/g
+    const short = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}, \d{4}, \d{1,2}:\d{2}\s?[AP]M\b/g
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.nodeValue.replace(long, 'October 5th 2026, 10:58 AM').replace(short, 'Oct 13, 2026, 11:47 PM')
+      if (text !== node.nodeValue) node.nodeValue = text
+    }
+  })
+const shot = async (name, clip) => {
+  await freezeDates()
+  await page.screenshot({ path: `${OUT}/${name}.png`, ...(clip ? { clip } : {}) })
+}
 const pad = (r, p = 8) => ({ x: Math.max(0, r.x - p), y: Math.max(0, r.y - p), width: r.width + 2 * p, height: r.height + 2 * p })
 // Hide the Next.js dev-mode badge and toasts' entry animation.
 const tidy = () => page.addStyleTag({ content: 'nextjs-portal{display:none!important} a[href$="/admin/account"] img{visibility:hidden} *{animation-duration:0s!important;transition-duration:0s!important}' })
