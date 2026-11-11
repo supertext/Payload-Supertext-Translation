@@ -6,7 +6,7 @@
 #   docker run -p 3000:3000 -e DATABASE_URL=postgres://user:pass@host:5432/payload_demo \
 #     -e PAYLOAD_SECRET=... -e SUPERTEXT_API_KEY=... payload-supertext-demo
 
-FROM node:22-slim AS base
+FROM node:26-slim AS base
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # 1. Build and pack the plugin.

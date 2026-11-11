@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Format: [Keep a Changel
 
 ## [Unreleased]
 
+### Changed
+
+- The demo runs Next.js 16.4.6 (was 16.4.5) on Node.js 26, the current LTS version (was 22). No change to the plugin itself.
+
 ## [1.0.0] - 2026-11-10
 
 First stable release. Every plugin release is now tested end to end against the live Supertext API (`.github/workflows/e2e.yml`).
