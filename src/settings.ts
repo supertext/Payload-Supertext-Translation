@@ -42,7 +42,7 @@ export function targetSelectOptions(): { label: Labels; value: string }[] {
 const TEXT = {
   description: {
     de: 'Wählen Sie für jede Sprache von Payload die Supertext-Sprache, in die übersetzt wird. Dieselbe Zuordnung gilt, wenn die Sprache die Ausgangssprache ist (Supertext erhält dann nur die Sprache, z. B. de). Vorausgewählt ist der Vorschlag von Supertext; Sprachen ohne Vorschlag müssen Sie zuordnen.',
-    en: 'Choose the Supertext language each Payload locale is translated into. The same mapping is used when the locale is the source (Supertext then gets only the language, e.g. de). Supertext’s suggestion is preselected; locales without a suggestion must be mapped.',
+    en: 'Choose the Supertext language each Payload locale is translated into. The same mapping is used when the locale is the source (Supertext then gets only the language, e.g. de). Supertext\'s suggestion is preselected; locales without a suggestion must be mapped.',
     fr: 'Choisissez pour chaque langue Payload la langue Supertext dans laquelle elle est traduite. La même association s’applique lorsque la langue est la langue source (Supertext ne reçoit alors que la langue, p. ex. de). La suggestion de Supertext est présélectionnée ; les langues sans suggestion doivent être associées.',
     it: 'Scelga per ogni lingua di Payload la lingua Supertext in cui viene tradotta. La stessa associazione vale quando la lingua è quella di partenza (Supertext riceve allora solo la lingua, ad es. de). Il suggerimento di Supertext è preselezionato; le lingue senza suggerimento vanno associate.',
   },
@@ -64,7 +64,7 @@ const TEXT = {
   review: { de: 'Übersetzungsprüfung', en: 'Translation review', fr: 'Révision des traductions', it: 'Revisione delle traduzioni' },
   reviewHelp: {
     de: 'Übersetzungen in diese Sprache laufen über den Prüfdienst von Supertext, damit Prüferinnen und Prüfer sie mit der Erweiterung Supertext Localization Review direkt auf der Website kontrollieren und korrigieren können. Ihre Korrekturen werden beim nächsten Übersetzen des Dokuments übernommen.',
-    en: 'Translations into this language go through Supertext’s review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.',
+    en: 'Translations into this language go through Supertext\'s review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.',
     fr: 'Les traductions vers cette langue passent par le service de révision de Supertext, afin que les réviseurs puissent les vérifier et les corriger directement sur le site avec l’extension Supertext Localization Review. Leurs corrections sont reprises lors de la prochaine traduction du document.',
     it: 'Le traduzioni in questa lingua passano dal servizio di revisione di Supertext, così i revisori possono controllarle e correggerle direttamente sul sito con l’estensione Supertext Localization Review. Le loro correzioni vengono riprese alla prossima traduzione del documento.',
   },
