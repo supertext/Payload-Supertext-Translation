@@ -448,7 +448,7 @@ export interface Header {
 export interface SupertextSetting {
   id: number;
   /**
-   * Choose the Supertext language each Payload locale is translated into. The same mapping is used when the locale is the source (Supertext then gets only the language, e.g. de). Supertext’s suggestion is preselected; locales without a suggestion must be mapped.
+   * Choose the Supertext language each Payload locale is translated into. The same mapping is used when the locale is the source (Supertext then gets only the language, e.g. de). Supertext's suggestion is preselected; locales without a suggestion must be mapped.
    */
   languages?: {
     l_en?:
@@ -494,7 +494,7 @@ export interface SupertextSetting {
       | null;
     l_en_tone?: ('default' | 'more' | 'less') | null;
     /**
-     * Translations into this language go through Supertext’s review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.
+     * Translations into this language go through Supertext's review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.
      */
     l_en_review?: boolean | null;
     l_de_CH?:
@@ -540,7 +540,7 @@ export interface SupertextSetting {
       | null;
     l_de_CH_tone?: ('default' | 'more' | 'less') | null;
     /**
-     * Translations into this language go through Supertext’s review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.
+     * Translations into this language go through Supertext's review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.
      */
     l_de_CH_review?: boolean | null;
     l_fr_CH?:
@@ -586,7 +586,7 @@ export interface SupertextSetting {
       | null;
     l_fr_CH_tone?: ('default' | 'more' | 'less') | null;
     /**
-     * Translations into this language go through Supertext’s review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.
+     * Translations into this language go through Supertext's review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.
      */
     l_fr_CH_review?: boolean | null;
     l_it_CH?:
@@ -632,7 +632,7 @@ export interface SupertextSetting {
       | null;
     l_it_CH_tone?: ('default' | 'more' | 'less') | null;
     /**
-     * Translations into this language go through Supertext’s review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.
+     * Translations into this language go through Supertext's review service, so reviewers can check and correct them on the website with the Supertext Localization Review extension. Their corrections are used the next time the document is translated.
      */
     l_it_CH_review?: boolean | null;
   };
