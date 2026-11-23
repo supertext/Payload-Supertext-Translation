@@ -240,7 +240,7 @@ describe('with a real Payload instance', () => {
       expect(selects.map((f) => f.name)).toEqual(['l_en', 'l_de_CH', 'l_fr', 'l_de_LI'])
       expect(selects.map((f) => f.defaultValue)).toEqual(['en-US', 'de-CH', 'fr-FR', undefined])
       expect(selects[0]!.options.map((o: { value: string }) => o.value)).toContain('gsw-u-sd-chzh')
-      expect(selects[0]!.options.find((o: { value: string }) => o.value === 'de-CH').label.de).toBe('Schweizer Hochdeutsch (de-CH)')
+      expect(selects[0]!.options.find((o: { value: string }) => o.value === 'de-CH').label.de).toBe('Deutsch (Schweiz) (de-CH)')
       // fr is set by the languageMap option: read-only and says so.
       expect(selects[2]!.admin.readOnly).toBe(true)
     })

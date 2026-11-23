@@ -168,14 +168,14 @@ await page.waitForTimeout(800)
 kit.resume()
 const mapping = page.locator('.field-type.group-field').first()
 const german = mapping.locator('.react-select').nth(1)
-await kit.say('Each Payload locale gets a Supertext language. For German, choose Swiss High German.', {
-  caption: 'German → <b>Swiss High German (de-CH)</b>',
+await kit.say('Each Payload locale gets a Supertext language. For German, choose German (Switzerland).', {
+  caption: 'German → <b>German (Switzerland) (de-CH)</b>',
   during: async () => {
     await kit.click(german)
     await page.waitForTimeout(300)
     await page.keyboard.type('Swiss High', { delay: 90 })
     await page.waitForTimeout(500)
-    await kit.click(page.locator('.rs__option').filter({ hasText: 'Swiss High German (de-CH)' }).first())
+    await kit.click(page.locator('.rs__option').filter({ hasText: 'German (Switzerland) (de-CH)' }).first())
   },
 })
 await kit.say('Translation review can be ticked for each language. Leave it off for now.', {

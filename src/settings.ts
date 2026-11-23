@@ -27,7 +27,7 @@ const each = (fn: (lang: Ui) => string): Labels =>
 export function targetName(code: string, english: string, lang: string): string {
   if (code.includes('-u-')) return english
   try {
-    const name = new Intl.DisplayNames([lang], { fallback: 'none', type: 'language' }).of(code)
+    const name = new Intl.DisplayNames([lang], { fallback: 'none', type: 'language', languageDisplay: 'standard' }).of(code)
     return name && name !== code ? name : english
   } catch {
     return english

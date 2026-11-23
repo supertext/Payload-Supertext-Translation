@@ -117,9 +117,9 @@ Each Payload locale needs a Supertext language. Supertext accepts exactly these 
 
 Choose them under **Supertext → Supertext settings** in the admin sidebar: one combo box per Payload locale (the source locale included), listing Supertext's languages as *Name (code)*, plus a **Tone** select (formal/informal) where the chosen language offers one and a **Translation review** checkbox (see [Translation review](#translation-review)). Save, and the next translation uses the new mapping; no restart.
 
-<img src="images/settings-languages.png" alt="Supertext settings, Language mapping: English (en) → American English (en-US); Deutsch (Schweiz) (de-CH) → Swiss High German (de-CH), Tone Formal; Français (Suisse) (fr-CH) → Swiss French (fr-CH), Tone Default; Italiano (Svizzera) (it-CH) → Italian (Switzerland) (it-CH), Tone Default; below each language the Translation review checkbox with its help text, not ticked" width="700">
+<img src="images/settings-languages.png" alt="Supertext settings, Language mapping: English (en) → English (United States) (en-US); Deutsch (Schweiz) (de-CH) → German (Switzerland) (de-CH), Tone Formal; Français (Suisse) (fr-CH) → French (Switzerland) (fr-CH), Tone Default; Italiano (Svizzera) (it-CH) → Italian (Switzerland) (it-CH), Tone Default; below each language the Translation review checkbox with its help text, not ticked" width="700">
 
-<img src="images/settings-languages-open.png" alt="The combo box for Deutsch (Schweiz) opened: Albanian (sq), Bulgarian (bg), Simplified Chinese (zh-Hans), Traditional Chinese (zh-Hant), Croatian (hr), Czech (cs), Danish (da), Dutch (nl), British English (en-GB) …" width="700">
+<img src="images/settings-languages-open.png" alt="The combo box for Deutsch (Schweiz) opened: Albanian (sq), Bulgarian (bg), Chinese (Simplified) (zh-Hans), Chinese (Traditional) (zh-Hant), Croatian (hr), Czech (cs), Danish (da), Dutch (nl), English (United Kingdom) (en-GB) …" width="700">
 
 Each combo box is preselected with Supertext's suggestion (the SDK's `suggestTarget`), and a locale nobody has mapped uses that suggestion when translating:
 
