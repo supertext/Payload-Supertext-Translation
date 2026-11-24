@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { languageStatus } from '../src/endpoints.js'
-import { PLUGIN_NAME, Reporting, SDK_VERSION, siteUrl, StateStore, versionReportsEnabled } from '../src/reporting.js'
+import { installedPackages, PLUGIN_NAME, Reporting, SDK_VERSION, siteUrl, StateStore, versionReportsEnabled } from '../src/reporting.js'
 import { apiKeyFingerprint } from '../src/vendor/supertext-sdk/v1/index.js'
 import { pluginVersion, releaseUrl } from '../src/versions.js'
 import { fakeSupertext } from './fakeSupertext.js'
@@ -59,12 +59,12 @@ describe('reporting glue', () => {
   it('keeps the state in Payload’s key-value store, or in memory without one', async () => {
     const kv = memoryKv()
     const store = new StateStore(fakePayload(kv))
-    expect(await store.load()).toEqual({ keyCheck: null, lastFailureAt: null, reportedKeyStatus: null, reportedVersions: null })
-    await store.save({ keyCheck: null, lastFailureAt: null, reportedKeyStatus: 'ok', reportedVersions: '1|2|3' })
+    expect(await store.load()).toEqual({ keyCheck: null, keyChecks: null, lastFailureAt: null, reportedKeyStatus: null, reportedKeyStatuses: null, reportedVersions: null })
+    await store.save({ keyCheck: null, keyChecks: null, lastFailureAt: null, reportedKeyStatus: 'ok', reportedKeyStatuses: null, reportedVersions: '1|2|3' })
     expect(kv.map.get('supertext-reporter')).toMatchObject({ reportedVersions: '1|2|3' })
 
     const memory = new StateStore(fakePayload(undefined))
-    await memory.save({ keyCheck: null, lastFailureAt: null, reportedKeyStatus: null, reportedVersions: 'x' })
+    await memory.save({ keyCheck: null, keyChecks: null, lastFailureAt: null, reportedKeyStatus: null, reportedKeyStatuses: null, reportedVersions: 'x' })
     expect((await memory.load()).reportedVersions).toBe('x')
   })
 
@@ -106,7 +106,8 @@ describe('reporting glue', () => {
     kv.map.set('supertext-reporter', old)
     expect(await reporting.run('onRequest', req(fakePayload(kv)), 'test-key')).toMatchObject({ event: null, sent: false })
     expect(fake.reports).toHaveLength(0)
-    expect(kv.map.get('supertext-reporter')).toEqual(old)
+    // Plugin Health 0.2+ adds keyChecks and reportedKeyStatuses (null with one key); everything else is kept.
+    expect(kv.map.get('supertext-reporter')).toEqual({ ...old, keyChecks: null, reportedKeyStatuses: null })
   })
 
   it('backs off after a failed report and never throws', async () => {
@@ -130,6 +131,46 @@ describe('reporting glue', () => {
     expect(new Reporting({ apiBaseUrl: '', versionReports: true }).ping('abcdefghijklmnop')).toMatchObject({ status: 200 })
     expect(new Reporting({ apiBaseUrl: '', versionReports: false }).ping('abcdefghijklmnop')).toMatchObject({ status: 404 })
     expect(new Reporting({ apiBaseUrl: '', versionReports: true }).ping(undefined)).toMatchObject({ status: 400 })
+  })
+})
+
+describe('Send configuration to Supertext', () => {
+  it('lists the project’s Payload packages with their installed versions, not Payload or this plugin', async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const dir = mkdtempSync(join(tmpdir(), 'st-payload-'))
+    writeFileSync(
+      join(dir, 'package.json'),
+      JSON.stringify({
+        dependencies: { '@payloadcms/db-postgres': '^3.90.0', next: '16.0.0', payload: '^3.90.0', 'payload-supertext-translation': '^1.0.0' },
+        devDependencies: { '@payloadcms/plugin-seo': '^3.90.0' },
+      }),
+    )
+    mkdirSync(join(dir, 'node_modules', '@payloadcms', 'db-postgres'), { recursive: true })
+    writeFileSync(join(dir, 'node_modules', '@payloadcms', 'db-postgres', 'package.json'), JSON.stringify({ version: '3.90.2' }))
+    expect(installedPackages(dir)).toEqual([
+      { active: true, name: '@payloadcms/db-postgres', type: 'package', version: '3.90.2' },
+      { active: true, name: '@payloadcms/plugin-seo', type: 'package', version: '^3.90.0' },
+    ])
+    expect(installedPackages(join(dir, 'missing'))).toEqual([])
+  })
+
+  it('sends the packages and the language mapping in one extensions report, nothing with reports off', async () => {
+    const fake = fakeSupertext()
+    const kv = memoryKv()
+    const make = (versionReports?: boolean) =>
+      new Reporting({
+        apiBaseUrl: 'https://api.test/v1/',
+        reporterOverrides: { clientOptions: { fetch: fake.fetch }, fetch: fake.fetch, reportUrl: 'https://center.test/api/v1/report' },
+        versionReports,
+      })
+    const packages = [{ active: true, name: '@payloadcms/plugin-seo', type: 'package', version: '3.90.0' }]
+    const languages = [{ code: 'de-CH', supertext: 'de-CH' }, { code: 'de-LI', supertext: null }]
+    expect(await make().sendConfiguration(req(fakePayload(kv)), packages, languages)).toMatchObject({ event: 'extensions', sent: true })
+    expect(fake.reports).toHaveLength(1)
+    expect(fake.reports[0]).toMatchObject({ event: 'extensions', extensions: [{ name: '@payloadcms/plugin-seo', version: '3.90.0' }], languages })
+    expect(await make(false).sendConfiguration(req(fakePayload(kv)), packages, languages)).toBeNull()
+    expect(fake.reports).toHaveLength(1)
   })
 })
 

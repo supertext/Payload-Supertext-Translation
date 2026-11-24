@@ -10,6 +10,9 @@
  * "settings saved": the key check runs when the key changed (fingerprint), on "Check again"
  * on the Supertext panel and after a 401/403 from Supertext.
  */
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import type { Payload, PayloadRequest } from 'payload'
 
 import {
@@ -18,7 +21,7 @@ import {
   reporterState,
   reportsEnabled,
 } from './vendor/supertext-plugin-health/index.js'
-import type { KeyCheck, PingResponse, ReporterOptions, ReporterResult, ReporterState } from './vendor/supertext-plugin-health/index.js'
+import type { Extension, KeyCheck, LanguageMapping, PingResponse, ReporterOptions, ReporterResult, ReporterState } from './vendor/supertext-plugin-health/index.js'
 import { apiKeyFingerprint, SupertextClient } from './vendor/supertext-sdk/v1/index.js'
 import type { SupertextClientOptions } from './vendor/supertext-sdk/v1/index.js'
 import { SDK_VERSION } from './vendor/supertext-sdk/version.js'
@@ -120,7 +123,7 @@ export class Reporting {
     return `${url}${payload.config.routes?.api ?? '/api'}${PING_PATH}`
   }
 
-  reporter(payload: Payload, url: string): InstallationReporter {
+  reporter(payload: Payload, url: string, languages?: LanguageMapping[]): InstallationReporter {
     const { clientOptions: overrideClientOptions, ...overrides } = this.options.reporterOverrides ?? {}
     const clientOptions: SupertextClientOptions = {
       baseUrl: this.options.apiBaseUrl,
@@ -136,6 +139,7 @@ export class Reporting {
       siteUrl: url,
       sdkVersion: SDK_VERSION,
       system: { name: 'Payload', version: payloadVersion() },
+      ...(languages ? { languages: () => languages } : {}),
       ...overrides,
     })
   }
@@ -172,6 +176,34 @@ export class Reporting {
     return task
   }
 
+  /**
+   * "Send configuration to Supertext" (dashboard panel): the installed packages and every locale with its
+   * Supertext code in one `extensions` report, sent now (also within the hour after a failed report).
+   * Null while version reports are off or without a site URL. Never throws.
+   */
+  sendConfiguration(req: PayloadRequest, extensions: Extension[], languages: LanguageMapping[]): Promise<ReporterResult | null> {
+    const task = this.#queue.then(async () => {
+      const { payload } = req
+      try {
+        const url = siteUrl(payload.config.serverURL, req)
+        if (!url || !this.enabled) return null
+        const store = this.store(payload)
+        const result = await this.reporter(payload, url, languages).sendExtensions(await store.load(), extensions)
+        await store.save(result.state)
+        return result
+      } catch (err) {
+        try {
+          payload.logger.debug(`[supertext] configuration not sent: ${err instanceof Error ? err.message : String(err)}`)
+        } catch {
+          // no logger: nothing to do
+        }
+        return null
+      }
+    })
+    this.#queue = task
+    return task
+  }
+
   /** For back-end requests: runs in the background, so the request doesn't wait for Supertext or the center. */
   inBackground(action: Action, req: PayloadRequest, apiKey: string, httpStatus?: number): void {
     void this.run(action, req, apiKey, httpStatus)
@@ -190,4 +222,39 @@ export class Reporting {
   async idle(): Promise<void> {
     await this.#queue.catch(() => undefined)
   }
+}
+
+/** Payload itself and this plugin: not sent by "Send configuration to Supertext". */
+const OWN_PACKAGES = new Set(['payload', 'payload-supertext-translation'])
+
+/**
+ * The Payload packages of the project for "Send configuration to Supertext" (Payload keeps no plugin
+ * names at runtime): every dependency in the project's package.json whose name contains "payload"
+ * (`@payloadcms/…` adapters and plugins, community plugins), with the installed version where
+ * node_modules has it, else the version range. Payload itself and this plugin are left out.
+ */
+export function installedPackages(projectDir: string = process.cwd()): Extension[] {
+  const read = (file: string): Record<string, unknown> | null => {
+    try {
+      return JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>
+    } catch {
+      return null
+    }
+  }
+  const project = read(join(projectDir, 'package.json'))
+  if (!project) return []
+  const names = new Set<string>()
+  for (const field of ['dependencies', 'devDependencies'] as const) {
+    const deps = project[field]
+    if (deps && typeof deps === 'object') for (const name of Object.keys(deps)) names.add(name)
+  }
+  const ranges = { ...((project.devDependencies as object) ?? {}), ...((project.dependencies as object) ?? {}) } as Record<string, unknown>
+  return [...names]
+    .filter((name) => /payload/i.test(name) && !OWN_PACKAGES.has(name))
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => {
+      const installed = read(join(projectDir, 'node_modules', name, 'package.json'))?.version
+      const version = typeof installed === 'string' ? installed : typeof ranges[name] === 'string' ? (ranges[name] as string) : null
+      return { active: true, name, type: 'package', version }
+    })
 }

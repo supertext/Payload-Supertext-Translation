@@ -4,7 +4,7 @@ import { exportItem, FileGlueError, importFile, readUpload, TranslationFileError
 import type { FileFormat } from './files.js'
 import { translate } from './i18n.js'
 import { politenessFor, suggestTargetCode, supportsPoliteness, targetCodeOrNull } from './languages.js'
-import { Reporting, SDK_VERSION, siteUrl } from './reporting.js'
+import { installedPackages, Reporting, SDK_VERSION, siteUrl } from './reporting.js'
 import { effectiveSettings, loadSettings, SETTINGS_SLUG } from './settings.js'
 import type { SavedSettings } from './settings.js'
 import { REVIEW_URL, SupertextClient, SUPERTEXT_ENVIRONMENTS } from './supertext/client.js'
@@ -108,6 +108,12 @@ export function createEndpoints(
   const canTranslate = async (req: PayloadRequest) =>
     Boolean(req.user) && (options.access ? await options.access({ req }) : true)
 
+  /** Who may use *Send configuration to Supertext*: whoever may change the Supertext settings. */
+  const canChangeSettings = async (req: PayloadRequest) => {
+    const check = options.settingsAccess ?? options.access
+    return Boolean(req.user) && (check ? await check({ req }) : true)
+  }
+
   /** Validates the item part of a translate or export request; returns an error text or the request. */
   const checkItemRequest = (body: Partial<TranslateRequestBody> | null, locales: string[]): string | TranslateRequestBody => {
     if (!body || typeof body !== 'object') return 'Expected a JSON body.'
@@ -141,6 +147,7 @@ export function createEndpoints(
         const version = pluginVersion()
         const status: StatusResponse = {
           apiKeyConfigured: apiKey !== '',
+          canSendConfiguration: await canChangeSettings(req),
           canTranslate: await canTranslate(req),
           keyCheck: publicCheck(await reporting.lastCheck(req.payload)),
           languages: languageStatus(locales, options, await loadSettings(req.payload)),
@@ -270,6 +277,24 @@ export function createEndpoints(
       },
       method: 'post',
       path: `${ENDPOINT_BASE}/check-key`,
+    },
+    {
+      // "Send configuration to Supertext": the project's Payload packages and the language mapping in
+      // one report. `sent: null` while version reports are off.
+      handler: async (req) => {
+        if (!req.user) return error(401, translate(req, 'notLoggedIn'))
+        if (!(await canChangeSettings(req))) return error(403, translate(req, 'notAllowed'))
+        const extensions = installedPackages()
+        const languages = languageStatus(localeCodes(req), options, await loadSettings(req.payload)).map((l) => ({
+          code: l.locale,
+          supertext: l.supertext,
+        }))
+        if (!reporting.enabled) return Response.json({ extensions: extensions.length, languages: languages.length, sent: null })
+        const result = await reporting.sendConfiguration(req, extensions, languages)
+        return Response.json({ extensions: extensions.length, languages: languages.length, sent: Boolean(result?.sent) })
+      },
+      method: 'post',
+      path: `${ENDPOINT_BASE}/send-configuration`,
     },
     {
       // Public: the Supertext Commando Center checks that the site is reachable. No login,

@@ -20,6 +20,8 @@ export function SupertextStatus() {
   const { i18n, t } = useTranslation<(typeof supertextTranslations)['en'], SupertextI18nKey>()
   const [status, setStatus] = useState<StatusResponse | null>(null)
   const [checking, setChecking] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState<string | null>(null)
 
   const api = `${config.serverURL ?? ''}${config.routes.api}`
 
@@ -44,6 +46,24 @@ export function SupertextStatus() {
       if (data && 'keyCheck' in data) setStatus((s) => (s ? { ...s, keyCheck: data.keyCheck ?? null } : s))
     } finally {
       setChecking(false)
+    }
+  }
+
+  /** "Send configuration to Supertext": the project's Payload packages and the language mapping. */
+  const sendConfiguration = async () => {
+    setSending(true)
+    setSent(null)
+    try {
+      const res = await fetch(`${api}/supertext/send-configuration`, { credentials: 'include', method: 'POST' })
+      const data = (await res.json().catch(() => null)) as { extensions?: number; languages?: number; sent?: boolean | null } | null
+      if (!res.ok || !data) setSent(t('supertext:configFailed'))
+      else if (data.sent === null) setSent(t('supertext:configOff'))
+      else if (data.sent) setSent(t('supertext:configSent', { extensions: String(data.extensions ?? 0), languages: String(data.languages ?? 0) }))
+      else setSent(t('supertext:configFailed'))
+    } catch {
+      setSent(t('supertext:configFailed'))
+    } finally {
+      setSending(false)
     }
   }
 
@@ -140,6 +160,19 @@ export function SupertextStatus() {
       <p style={{ ...muted, fontSize: 13, margin: '4px 0 0' }}>{t('supertext:reportsHelp')}</p>
       {status.reports.pingUrl && (
         <p style={{ ...muted, fontSize: 13, margin: '4px 0 0' }}>{t('supertext:pingUrl', { url: status.reports.pingUrl })}</p>
+      )}
+      {status.canSendConfiguration && (
+        <div data-supertext-send-configuration style={{ marginTop: 12 }}>
+          <Button buttonStyle="secondary" disabled={sending || !status.reports.enabled} margin={false} onClick={sendConfiguration} size="small">
+            {t('supertext:configButton')}
+          </Button>
+          <p style={{ ...muted, fontSize: 13, margin: '4px 0 0' }}>{t('supertext:configHelp')}</p>
+          {sent && (
+            <p role="status" style={{ margin: '4px 0 0' }}>
+              {sent}
+            </p>
+          )}
+        </div>
       )}
     </section>
   )

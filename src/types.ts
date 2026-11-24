@@ -144,6 +144,8 @@ export type StatusResponse = {
   /** Admin path of the Supertext settings (language mapping). */
   settingsUrl: string
   reports: { enabled: boolean; pingUrl: string | null }
+  /** Whether this user may use *Send configuration to Supertext* (the settings access). */
+  canSendConfiguration: boolean
   keyCheck: KeyCheckStatus | null
 }
 

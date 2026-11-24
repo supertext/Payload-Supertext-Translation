@@ -26,6 +26,20 @@ dest="$root/src/vendor/supertext-plugin-health"
 rm -rf "$dest"
 mkdir -p "$dest"
 cp -R "$src"/plugin-health/typescript/src/. "$dest/"
+# Plugin Health 0.4+ reads the dashboard address from config.json with an import attribute
+# (`import config from './config.json' with { type: 'json' }`), which not every tsconfig or bundler
+# accepts: the copy gets the same values as a constant instead.
+if [ -f "$src/plugin-health/typescript/src/config.json" ]; then
+  node -e '
+    const fs = require("fs");
+    const [index, json] = process.argv.slice(1);
+    const config = JSON.parse(fs.readFileSync(json, "utf8"));
+    const line = "import config from \x27./config.json\x27 with { type: \x27json\x27 }";
+    const source = fs.readFileSync(index, "utf8");
+    if (!source.includes(line)) { console.error("config.json import not found in " + index); process.exit(1); }
+    fs.writeFileSync(index, source.replace(line, "// Inlined from config.json by scripts/vendor-plugin-health.sh.\nconst config = " + JSON.stringify(config) + " as const"));
+  ' "$dest/index.ts" "$src/plugin-health/typescript/src/config.json"
+fi
 cp "$src/plugin-health/typescript/LICENSE" "$dest/LICENSE"
 printf '%s\n' "$commit" > "$dest/COMMIT"
 printf '%s\n' "$version" > "$dest/VERSION"

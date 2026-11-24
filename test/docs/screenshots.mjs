@@ -81,7 +81,7 @@ await shot('translate-menu', pad(await popover.boundingBox()))
 
 await page.getByRole('button', { name: /^Translate into/ }).click()
 const toast = page.getByText(/^Translated into /).first()
-await toast.waitFor({ timeout: 120000 })
+await toast.waitFor({ timeout: 300000 })
 await page.waitForTimeout(800)
 const t = await toast.boundingBox()
 await shot('translated-toast', { x: t.x - 60, y: t.y - 40, width: t.width + 140, height: t.height + 80 })

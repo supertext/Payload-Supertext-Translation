@@ -4,8 +4,14 @@ All notable changes to this project are documented here. Format: [Keep a Changel
 
 ## [Unreleased]
 
+### Added
+
+- *Send configuration to Supertext* in the Supertext panel on the dashboard (users with access to the *Supertext settings*): sends the project's Payload packages and the language mapping to Supertext support in one report (Supertext Plugin Health 0.4.0). Nothing is sent while version reports are off.
+
 ### Changed
 
+- Version reports go to `https://pluginhealth.supertext.com` (Supertext Plugin Health 0.4.0).
+- The docs screenshots show real Supertext translations: CI takes them with the live API (secret `SUPERTEXT_API_KEY`); the stand-in API translates only without the key. Version reports still go to the stand-in.
 - Language lists name Supertext's languages the way Supertext's own language list does, in the interface language: *German (Switzerland)*, *Deutsch (Schweiz)*, *allemand (Suisse)*, *tedesco (Svizzera)* instead of *Swiss High German*, *Schweizer Hochdeutsch*, *allemand suisse*, *alto tedesco svizzero* (likewise *French (Switzerland)*, *English (United States)* …).
 - The demo runs Next.js 16.4.6 (was 16.4.5) on Node.js 26, the current LTS version (was 22). No change to the plugin itself.
 - Tested with Payload 3.94 (development setup and demo moved from 3.93.0 to 3.94.0). The demo is type-checked with TypeScript 7 (was 5.7) and has a migration for the indexes Payload 3.94 adds to localized tables.
