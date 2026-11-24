@@ -45,7 +45,13 @@ await page.waitForURL(/\/admin\/?$/, { timeout: 60000 })
 // --- Installation guide: the Supertext panel on the dashboard -----------------
 await page.goto(`${B}/admin`)
 const panel = page.locator('section.supertext-status')
-await panel.getByText('API key checked').waitFor({ timeout: 60000 })
+// The panel shows the stored key check; the first one runs in the background and takes longer
+// with the real API, so check again from the panel if it isn't there yet.
+const checked = panel.getByText('API key checked')
+if (!(await checked.waitFor({ timeout: 15000 }).then(() => true).catch(() => false))) {
+  await panel.getByRole('button', { name: 'Check again' }).click()
+  await checked.waitFor({ timeout: 120000 })
+}
 await tidy()
 // Show the live demo's ping URL, not the local one.
 await panel.evaluate((el) => {
