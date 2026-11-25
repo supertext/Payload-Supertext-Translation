@@ -317,7 +317,7 @@ One major version is ignored on purpose: `@types/node` (the types must match the
 
 The plugin and the demo are type-checked with TypeScript 7 (the native compiler, `tsc`); Next.js 16.4 type-checks the demo with it during `next build`. TypeScript 7 removed `baseUrl`, so the demo's `tsconfig.json` has only `paths`.
 
-`overrides` in `package.json` force the fixed versions of two packages that dependencies pin to vulnerable releases (security advisories, November 2026): `dompurify` 3.4.17 or newer (pinned by `monaco-editor` in `@payloadcms/ui`) and `happy-dom` 21.0.4 or newer (`@lexical/headless` 0.50 asks for 20; Lexical 0.53 itself moved to 21). `demo/package.json` has the `happy-dom` override too. Remove them once Payload's dependencies ship the fixed versions. Remaining advisories (low and moderate, development tools only): `esbuild` 0.18 inside `drizzle-kit`'s `@esbuild-kit` loader and `deepmerge` (no fixed version).
+`overrides` in `package.json` force the fixed versions of two packages that dependencies pin to vulnerable releases (security advisories, November 2026): `dompurify` 3.4.17 or newer (pinned by `monaco-editor` in `@payloadcms/ui`) and `happy-dom` 21.0.4 or newer (`@lexical/headless` 0.50 asks for 20; Lexical 0.53 itself moved to 21). `demo/package.json` has the `happy-dom` override too. Remove them once Payload's dependencies ship the fixed versions. Remaining advisory (moderate, development tools only): `esbuild` 0.18 inside `drizzle-kit`'s `@esbuild-kit` loader.
 
 ## Code quality and security checks
 

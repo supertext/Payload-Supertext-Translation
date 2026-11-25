@@ -61,17 +61,17 @@
     "node-html-parser": "^9.0.7"
   },
   "devDependencies": {
-    "@payloadcms/db-sqlite": "^3.94.0",
-    "@payloadcms/richtext-lexical": "^3.94.0",
-    "@payloadcms/translations": "^3.94.0",
-    "@payloadcms/ui": "^3.94.0",
+    "@payloadcms/db-sqlite": "^3.94.2",
+    "@payloadcms/richtext-lexical": "^3.94.2",
+    "@payloadcms/translations": "^3.94.2",
+    "@payloadcms/ui": "^3.94.2",
     "@types/node": "^22.20.5",
-    "@types/react": "^19.3.0",
-    "payload": "^3.94.0",
+    "@types/react": "^19.3.1",
+    "payload": "^3.94.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   },
   "overrides": {
     "dompurify": "^3.4.17",
