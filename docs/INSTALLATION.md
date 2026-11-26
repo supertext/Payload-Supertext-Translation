@@ -113,7 +113,7 @@ Each Payload locale needs a Supertext language. Supertext accepts exactly these 
 | German, English, French, Italian, Portuguese | `de-DE`, `de-CH`, `de-AT`, `en-US`, `en-GB`, `fr-FR`, `fr-CH`, `it-IT`, `it-CH`, `pt-PT`, `pt-BR` |
 | Chinese, Serbian | `zh-Hans`, `zh-Hant`, `sr-Latn`, `sr-Cyrl` |
 | Swiss German | `gsw-u-sd-chzh` (Zurich), `gsw-u-sd-chbe` (Bern) |
-| All others, without region | `bg`, `cs`, `da`, `el`, `es`, `fi`, `hr`, `hu`, `ja`, `ko`, `nb`, `nl`, `pl`, `rm`, `ru`, `sk`, `sl`, `sq`, `sv`, `tr` |
+| All others, without region | `bg`, `cs`, `da`, `el`, `es`, `fi`, `hr`, `hu`, `id`, `ja`, `ko`, `nb`, `nl`, `pl`, `rm`, `ro`, `ru`, `sk`, `sl`, `sq`, `sv`, `th`, `tr`, `vi` |
 
 Choose them under **Supertext → Supertext settings** in the admin sidebar: one combo box per Payload locale (the source locale included), listing Supertext's languages as *Name (code)*, plus a **Tone** select (formal/informal) where the chosen language offers one and a **Translation review** checkbox (see [Translation review](#translation-review)). Save, and the next translation uses the new mapping; no restart.
 
